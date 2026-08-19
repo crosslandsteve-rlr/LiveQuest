@@ -1,0 +1,1663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StageCall Pro</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080808;--surface:#111;--surface2:#181818;--surface3:#1e1e1e;
+  --border:#252525;--border2:#333;
+  --gold:#d4a843;--gold-lt:#e8c060;--gold-dim:#8a6a20;
+  --red:#d95858;--green:#4db87a;--blue:#5b9bd5;--purple:#9b7fd4;
+  --text:#ede9de;--dim:#777;--dim2:#444;
+  --ff-h:'Bebas Neue',sans-serif;--ff:'DM Sans',sans-serif;
+}
+html,body{background:var(--bg);color:var(--text);font-family:var(--ff);min-height:100vh;font-size:15px;line-height:1.5}
+
+/* ── Screens ── */
+.screen{display:none;min-height:100vh}
+.screen.active{display:block}
+
+/* ══════════════════════════════════════════════════
+   LOGIN SCREEN
+══════════════════════════════════════════════════ */
+#screen-login{display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(ellipse at 30% 40%,rgba(212,168,67,.07) 0%,transparent 60%)}
+.login-box{width:100%;max-width:420px}
+.login-logo{font-family:var(--ff-h);font-size:52px;letter-spacing:4px;color:var(--gold);text-align:center;margin-bottom:4px}
+.login-tagline{text-align:center;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--dim);margin-bottom:40px}
+.login-card{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:32px}
+.login-card h2{font-family:var(--ff-h);font-size:26px;letter-spacing:2px;color:var(--text);margin-bottom:24px}
+.login-tabs{display:flex;gap:4px;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:3px;margin-bottom:24px}
+.login-tab{flex:1;padding:7px;border:none;border-radius:5px;font-family:var(--ff);font-size:13px;font-weight:500;cursor:pointer;background:transparent;color:var(--dim);transition:all .15s}
+.login-tab.active{background:var(--gold);color:#000;font-weight:600}
+.form-group{margin-bottom:16px}
+.form-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:6px;display:block}
+.form-input{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:11px 14px;font-family:var(--ff);font-size:14px;color:var(--text);outline:none;transition:border-color .2s}
+.form-input:focus{border-color:var(--gold-dim)}
+.form-input::placeholder{color:var(--dim2)}
+.login-hint{font-size:11px;color:var(--dim2);margin-top:10px;text-align:center;line-height:1.6}
+.login-hint b{color:var(--dim)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:7px;border:none;font-family:var(--ff);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;letter-spacing:.2px;text-decoration:none}
+.btn-gold{background:var(--gold);color:#000}.btn-gold:hover{background:var(--gold-lt)}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text)}.btn-ghost:hover{border-color:var(--gold-dim);color:var(--gold)}
+.btn-red{background:transparent;border:1px solid var(--red);color:var(--red)}.btn-red:hover{background:var(--red);color:#fff}
+.btn-green{background:var(--green);color:#000}.btn-green:hover{filter:brightness(1.1)}
+.btn-blue{background:var(--blue);color:#fff}.btn-blue:hover{filter:brightness(1.1)}
+.btn-sm{padding:6px 13px;font-size:12px}
+.btn-xs{padding:4px 10px;font-size:11px}
+.btn-full{width:100%;justify-content:center}
+.err-msg{background:rgba(217,88,88,.12);border:1px solid rgba(217,88,88,.3);border-radius:6px;padding:10px 14px;font-size:13px;color:var(--red);margin-bottom:16px;display:none}
+
+/* ══════════════════════════════════════════════════
+   SHARED APP CHROME
+══════════════════════════════════════════════════ */
+.topbar{position:sticky;top:0;z-index:90;background:rgba(8,8,8,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);height:58px;display:flex;align-items:center;padding:0 20px;gap:14px}
+.topbar-logo{font-family:var(--ff-h);font-size:26px;letter-spacing:3px;color:var(--gold);flex:1;user-select:none}
+.topbar-logo span{color:var(--dim2);font-size:10px;letter-spacing:4px;font-family:var(--ff);font-weight:300;display:block;margin-top:-6px}
+.topbar-user{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--dim)}
+.topbar-avatar{width:32px;height:32px;border-radius:50%;background:var(--surface2);border:1px solid var(--border2);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.topbar-avatar img{width:100%;height:100%;object-fit:cover}
+.role-badge{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;padding:3px 8px;border-radius:4px;font-weight:600}
+.role-admin{background:rgba(155,127,212,.2);color:var(--purple)}
+.role-musician{background:rgba(212,168,67,.15);color:var(--gold)}
+.role-audience{background:rgba(91,155,213,.15);color:var(--blue)}
+
+.page{max-width:960px;margin:0 auto;padding:28px 20px 60px}
+.page-wide{max-width:1100px;margin:0 auto;padding:28px 20px 60px}
+
+.section-title{font-family:var(--ff-h);font-size:34px;letter-spacing:2px;color:var(--gold);margin-bottom:4px}
+.section-sub{font-size:13px;color:var(--dim);margin-bottom:28px}
+
+/* ── Tabs ── */
+.tabs{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.tab-btn{padding:7px 18px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--dim);font-family:var(--ff);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s}
+.tab-btn.active{background:var(--gold);color:#000;border-color:var(--gold);font-weight:600}
+.tab-btn .pill{display:inline-flex;align-items:center;justify-content:center;background:var(--red);color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:6px;line-height:1.4}
+.tab-btn.active .pill{background:rgba(0,0,0,.25);color:#000}
+.tab-panel{display:none}.tab-panel.active{display:block}
+
+/* ── Stats ── */
+.stats{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 20px;min-width:90px;text-align:center;flex:1}
+.stat-n{font-family:var(--ff-h);font-size:34px;letter-spacing:1px;color:var(--gold);line-height:1}
+.stat-n.red{color:var(--red)}.stat-n.green{color:var(--green)}.stat-n.blue{color:var(--blue)}
+.stat-l{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--dim);margin-top:4px}
+
+/* ── Cards ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px;margin-bottom:12px}
+.card-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.card-title{font-size:15px;font-weight:600}
+.card-sub{font-size:12px;color:var(--dim);margin-top:2px}
+
+/* ── Musician list (admin) ── */
+.musician-row{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;display:flex;align-items:center;gap:16px;margin-bottom:10px;transition:border-color .15s}
+.musician-row:hover{border-color:var(--border2)}
+.musician-avatar{width:48px;height:48px;border-radius:50%;background:var(--surface2);border:2px solid var(--border2);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.musician-avatar img{width:100%;height:100%;object-fit:cover}
+.musician-info{flex:1;min-width:0}
+.musician-name{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.musician-meta{font-size:12px;color:var(--dim);margin-top:2px}
+.musician-actions{display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap}
+
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.3px}
+.badge-gold{background:rgba(212,168,67,.15);color:var(--gold)}
+.badge-green{background:rgba(77,184,122,.15);color:var(--green)}
+.badge-red{background:rgba(217,88,88,.15);color:var(--red)}
+.badge-blue{background:rgba(91,155,213,.15);color:var(--blue)}
+.badge-purple{background:rgba(155,127,212,.15);color:var(--purple)}
+.badge-gray{background:rgba(255,255,255,.06);color:var(--dim)}
+
+/* ── Settings panel ── */
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:580px){.settings-grid{grid-template-columns:1fr}}
+.setting-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:18px}
+.setting-box h4{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:12px}
+.setting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.setting-row:last-child{margin-bottom:0}
+.setting-label{font-size:14px}
+.setting-sub{font-size:11px;color:var(--dim);margin-top:2px}
+.setting-input{background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:7px 11px;font-family:var(--ff);font-size:14px;color:var(--text);outline:none;width:110px;text-align:right;transition:border-color .2s}
+.setting-input:focus{border-color:var(--gold-dim)}
+.setting-input.wide{width:auto;flex:1;text-align:left}
+
+/* ── Toggle switch ── */
+.toggle{position:relative;width:40px;height:22px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle-slider{position:absolute;inset:0;background:var(--border2);border-radius:11px;cursor:pointer;transition:.2s}
+.toggle-slider::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.toggle input:checked+.toggle-slider{background:var(--green)}
+.toggle input:checked+.toggle-slider::before{transform:translateX(18px)}
+
+/* ── Data table ── */
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{text-align:left;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--dim);padding:10px 14px;border-bottom:1px solid var(--border);font-weight:500}
+.data-table td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:rgba(255,255,255,.02)}
+
+/* ── Modal ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(6px);z-index:200;align-items:center;justify-content:center;padding:20px}
+.modal-bg.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:32px;width:100%;max-width:500px;animation:modalIn .2s ease;max-height:90vh;overflow-y:auto}
+@keyframes modalIn{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal h2{font-family:var(--ff-h);font-size:28px;letter-spacing:2px;color:var(--gold);margin-bottom:6px}
+.modal-sub{font-size:13px;color:var(--dim);margin-bottom:24px}
+.modal-actions{display:flex;gap:10px;margin-top:24px}
+.modal-actions .btn{flex:1;justify-content:center}
+
+/* ── Form ── */
+.form-group{margin-bottom:16px}
+.form-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:6px;display:block;font-weight:500}
+.form-input{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:10px 14px;font-family:var(--ff);font-size:14px;color:var(--text);outline:none;transition:border-color .2s}
+.form-input:focus{border-color:var(--gold-dim)}
+.form-input::placeholder{color:var(--dim2)}
+textarea.form-input{resize:vertical;min-height:80px;line-height:1.6}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:480px){.form-row{grid-template-columns:1fr}}
+.form-hint{font-size:11px;color:var(--dim2);margin-top:5px}
+select.form-input{cursor:pointer}
+
+/* ── Billing plan selector ── */
+.plan-selector{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.plan-card{background:var(--bg);border:2px solid var(--border2);border-radius:10px;padding:16px;cursor:pointer;transition:all .15s;position:relative}
+.plan-card.selected{border-color:var(--gold);background:rgba(212,168,67,.05)}
+.plan-card h4{font-size:14px;font-weight:600;margin-bottom:4px}
+.plan-card p{font-size:12px;color:var(--dim);line-height:1.5}
+.plan-price{font-family:var(--ff-h);font-size:22px;letter-spacing:1px;color:var(--gold);margin-top:8px}
+.plan-card input[type=radio]{position:absolute;opacity:0;pointer-events:none}
+
+/* ── Upload zone ── */
+.upload-zone{border:2px dashed var(--border2);border-radius:14px;padding:40px 24px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;margin-bottom:24px;position:relative}
+.upload-zone:hover,.upload-zone.over{border-color:var(--gold-dim);background:rgba(212,168,67,.04)}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-zone p{color:var(--dim);font-size:14px;line-height:1.7}
+.upload-zone strong{color:var(--text)}
+.upload-icon{font-size:36px;margin-bottom:10px}
+
+/* ── Profile editor ── */
+.profile-editor{display:grid;grid-template-columns:180px 1fr;gap:28px;align-items:start}
+@media(max-width:580px){.profile-editor{grid-template-columns:1fr}}
+.profile-photo-wrap{display:flex;flex-direction:column;align-items:center;gap:12px}
+.profile-photo-ring{width:150px;height:150px;border-radius:50%;border:3px solid var(--border2);overflow:hidden;background:var(--surface2);display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;transition:border-color .2s;font-size:42px}
+.profile-photo-ring:hover{border-color:var(--gold-dim)}
+.profile-photo-ring img{width:100%;height:100%;object-fit:cover;display:none}
+.profile-photo-ring img.loaded{display:block}
+.profile-photo-overlay{position:absolute;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;font-weight:500;opacity:0;transition:opacity .2s;border-radius:50%}
+.profile-photo-ring:hover .profile-photo-overlay{opacity:1}
+.profile-photo-ring input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;border-radius:50%}
+.photo-hint{font-size:11px;color:var(--dim);text-align:center;line-height:1.5}
+.profile-fields{display:flex;flex-direction:column;gap:14px}
+.social-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ── Queue cards ── */
+.queue-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:580px){.queue-grid{grid-template-columns:1fr}}
+.req-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:10px;animation:slideIn .25s ease}
+.req-card.hot{border-color:var(--gold);box-shadow:0 0 0 1px rgba(212,168,67,.15),0 4px 20px rgba(0,0,0,.4)}
+@keyframes slideIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.req-title{font-size:16px;font-weight:600}
+.req-artist{font-size:13px;color:var(--dim);margin-top:2px}
+.req-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.req-note{font-size:12px;color:var(--dim);font-style:italic;border-left:2px solid var(--border2);padding-left:10px;line-height:1.5}
+
+/* ── Audience profile card ── */
+.aud-profile-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:26px;display:flex;gap:22px;align-items:center;margin-bottom:26px;position:relative;overflow:hidden}
+.aud-profile-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top left,rgba(212,168,67,.08) 0%,transparent 60%);pointer-events:none}
+.aud-avatar{width:86px;height:86px;border-radius:50%;object-fit:cover;border:2px solid var(--gold-dim);flex-shrink:0;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:32px;overflow:hidden}
+.aud-avatar img{width:100%;height:100%;object-fit:cover}
+.aud-profile-info{flex:1;min-width:0}
+.aud-name{font-family:var(--ff-h);font-size:28px;letter-spacing:2px;color:var(--gold);line-height:1.1;margin-bottom:4px}
+.aud-tagline{font-size:13px;color:var(--dim);margin-bottom:8px}
+.aud-bio{font-size:13px;color:var(--dim);line-height:1.65;margin-bottom:10px}
+.social-links{display:flex;gap:10px;flex-wrap:wrap}
+.social-link{font-size:12px;color:var(--dim);text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:color .15s}
+.social-link:hover{color:var(--gold)}
+
+/* ── Song list (audience) ── */
+.search-wrap{position:relative;margin-bottom:16px}
+.search-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--dim);pointer-events:none}
+.search-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:12px 16px 12px 42px;font-family:var(--ff);font-size:15px;color:var(--text);outline:none;transition:border-color .2s}
+.search-input:focus{border-color:var(--gold-dim)}
+.search-input::placeholder{color:var(--dim)}
+.sort-bar{display:flex;gap:8px;margin-bottom:18px;align-items:center;flex-wrap:wrap}
+.sort-bar span{font-size:11px;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;margin-right:4px}
+.sort-pill{padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--dim);font-size:12px;font-family:var(--ff);font-weight:500;cursor:pointer;transition:all .15s}
+.sort-pill.active{background:var(--surface2);border-color:var(--border2);color:var(--text)}
+.song-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:14px;margin-bottom:9px;cursor:pointer;transition:border-color .18s,background .18s,transform .1s;user-select:none}
+.song-card:hover{border-color:var(--gold-dim);background:var(--surface2);transform:translateX(2px)}
+.song-num{font-size:12px;color:var(--dim2);min-width:22px;text-align:right;font-weight:300}
+.song-info{flex:1;min-width:0}
+.song-title{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.song-meta-txt{font-size:12px;color:var(--dim);margin-top:2px}
+.song-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.song-price{font-family:var(--ff-h);font-size:24px;letter-spacing:1px;color:var(--gold);line-height:1}
+.song-price.surge{color:var(--red)}
+.surge-lbl{font-size:9px;color:var(--red);letter-spacing:1px;text-transform:uppercase}
+.hot-lbl{font-size:9px;color:var(--gold);letter-spacing:1px;text-transform:uppercase}
+
+/* ── Request modal ── */
+.modal-song{font-family:var(--ff-h);font-size:30px;letter-spacing:2px;color:var(--gold);line-height:1.1;margin-bottom:4px}
+.modal-artist{color:var(--dim);font-size:13px;margin-bottom:20px}
+.modal-price-block{text-align:center;margin:14px 0 18px}
+.modal-price-num{font-family:var(--ff-h);font-size:58px;letter-spacing:2px;color:var(--gold);line-height:1}
+.modal-price-num.surge{color:var(--red)}
+.modal-surge-note{font-size:11px;color:var(--red);letter-spacing:1px;text-transform:uppercase;margin-top:6px}
+.modal-base-note{font-size:11px;color:var(--dim);margin-top:6px}
+
+/* ── Billing history ── */
+.billing-row{display:flex;align-items:center;gap:14px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;font-size:13px}
+.billing-row .bl-date{color:var(--dim);min-width:90px}
+.billing-row .bl-desc{flex:1}
+.billing-row .bl-amount{font-family:var(--ff-h);font-size:18px;letter-spacing:1px}
+.billing-row .bl-amount.credit{color:var(--green)}
+.billing-row .bl-amount.debit{color:var(--red)}
+
+/* ── Disabled overlay ── */
+.disabled-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;text-align:center;padding:40px}
+.disabled-screen h2{font-family:var(--ff-h);font-size:36px;letter-spacing:3px;color:var(--red);margin-bottom:12px}
+.disabled-screen p{font-size:14px;color:var(--dim);max-width:360px;line-height:1.7}
+
+/* ── Misc ── */
+.divider{border:none;border-top:1px solid var(--border);margin:24px 0}
+.tip{font-size:12px;color:var(--dim);background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:20px;line-height:1.6}
+.tip strong{color:var(--text)}
+.empty{text-align:center;padding:56px 20px}
+.empty-icon{font-size:44px;margin-bottom:14px}
+.empty h3{font-family:var(--ff-h);font-size:24px;letter-spacing:2px;color:var(--dim);margin-bottom:8px}
+.empty p{font-size:13px;color:var(--dim2)}
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--green);color:#000;font-weight:600;font-size:13px;padding:10px 22px;border-radius:24px;z-index:400;opacity:0;transition:opacity .25s,transform .25s;white-space:nowrap;pointer-events:none}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.no-results{text-align:center;padding:36px 20px;color:var(--dim);font-size:14px}
+@media(max-width:480px){.aud-profile-card{flex-direction:column;text-align:center}.social-links{justify-content:center}}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     LOGIN SCREEN
+══════════════════════════════════════════════════ -->
+<div id="screen-login" class="screen active">
+  <div class="login-box">
+    <div class="login-logo">StageCall</div>
+    <div class="login-tagline">Pro · Live Song Request Platform</div>
+    <div class="login-card">
+      <div class="login-tabs">
+        <button class="login-tab active" onclick="loginTab('signin')">Sign In</button>
+        <button class="login-tab" onclick="loginTab('signup')">Musician Sign Up</button>
+      </div>
+
+      <!-- Sign In -->
+      <div id="ltab-signin">
+        <div class="err-msg" id="signin-err"></div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" id="si-email" type="email" placeholder="you@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input class="form-input" id="si-pass" type="password" placeholder="••••••••">
+        </div>
+        <button class="btn btn-gold btn-full" onclick="doSignIn()" style="margin-top:4px">Sign In →</button>
+        <div class="login-hint" style="margin-top:16px">
+          <b>Demo accounts:</b><br>
+          admin@stagecall.com / admin<br>
+          musician@stagecall.com / music<br>
+          jane@stagecall.com / music
+        </div>
+      </div>
+
+      <!-- Sign Up -->
+      <div id="ltab-signup" style="display:none">
+        <div class="err-msg" id="signup-err"></div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">First Name</label>
+            <input class="form-input" id="su-first" type="text" placeholder="Dave">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Last Name</label>
+            <input class="form-input" id="su-last" type="text" placeholder="McKenzie">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Stage Name / Act</label>
+          <input class="form-input" id="su-stage" type="text" placeholder="e.g. Acoustic Dave">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" id="su-email" type="email" placeholder="you@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input class="form-input" id="su-pass" type="password" placeholder="Min 6 characters">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Billing Plan</label>
+          <div class="plan-selector" id="su-plan-selector">
+            <label class="plan-card selected" id="plan-monthly-card">
+              <input type="radio" name="su-plan" value="monthly" checked onchange="selectPlan('monthly')">
+              <h4>📅 Monthly</h4>
+              <p>Flat monthly fee, billed automatically</p>
+              <div class="plan-price" id="su-monthly-price">$29/mo</div>
+            </label>
+            <label class="plan-card" id="plan-percent-card">
+              <input type="radio" name="su-plan" value="percent" onchange="selectPlan('percent')">
+              <h4>📊 Per Show %</h4>
+              <p>Pay a percentage of each show's revenue</p>
+              <div class="plan-price" id="su-percent-price">15%</div>
+            </label>
+          </div>
+        </div>
+        <button class="btn btn-gold btn-full" onclick="doSignUp()">Create Account →</button>
+        <p class="login-hint" style="margin-top:12px">Account requires admin approval before going live.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     ADMIN SCREEN
+══════════════════════════════════════════════════ -->
+<div id="screen-admin" class="screen">
+  <div class="topbar">
+    <div class="topbar-logo">StageCall <span>Admin Console</span></div>
+    <div class="topbar-user">
+      <span class="role-badge role-admin">Admin</span>
+      <span id="admin-name-display" style="color:var(--dim);font-size:13px"></span>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+  <div class="page-wide">
+    <div class="stats">
+      <div class="stat"><div class="stat-n" id="adm-stat-total">0</div><div class="stat-l">Musicians</div></div>
+      <div class="stat"><div class="stat-n green" id="adm-stat-active">0</div><div class="stat-l">Active</div></div>
+      <div class="stat"><div class="stat-n red" id="adm-stat-disabled">0</div><div class="stat-l">Disabled</div></div>
+      <div class="stat"><div class="stat-n blue" id="adm-stat-pending">0</div><div class="stat-l">Pending</div></div>
+      <div class="stat"><div class="stat-n" id="adm-stat-revenue">$0</div><div class="stat-l">Platform Revenue</div></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="admTab('musicians')" id="atab-musicians">Musicians <span class="pill" id="adm-pending-pill" style="display:none">0</span></button>
+      <button class="tab-btn" onclick="admTab('settings')" id="atab-settings">Pricing & Settings</button>
+      <button class="tab-btn" onclick="admTab('revenue')" id="atab-revenue">Revenue</button>
+    </div>
+
+    <!-- Musicians tab -->
+    <div class="tab-panel active" id="apanel-musicians">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+        <div>
+          <div class="section-title" style="font-size:28px;margin-bottom:0">Musicians</div>
+          <div style="font-size:13px;color:var(--dim)">Manage accounts, plans and access</div>
+        </div>
+        <button class="btn btn-gold" onclick="openAddMusician()">+ Add Musician</button>
+      </div>
+
+      <!-- Filter pills -->
+      <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap">
+        <button class="sort-pill active" onclick="setMusicianFilter('all')" id="mf-all">All</button>
+        <button class="sort-pill" onclick="setMusicianFilter('active')" id="mf-active">Active</button>
+        <button class="sort-pill" onclick="setMusicianFilter('pending')" id="mf-pending">Pending Approval</button>
+        <button class="sort-pill" onclick="setMusicianFilter('disabled')" id="mf-disabled">Disabled</button>
+      </div>
+
+      <div id="musician-list"></div>
+    </div>
+
+    <!-- Settings tab -->
+    <div class="tab-panel" id="apanel-settings">
+      <div class="section-title" style="font-size:28px;margin-bottom:4px">Pricing & Settings</div>
+      <div class="section-sub">Changes apply to new sign-ups and plan renewals</div>
+      <div class="settings-grid">
+        <div class="setting-box">
+          <h4>Monthly Subscription</h4>
+          <div class="setting-row">
+            <div><div class="setting-label">Monthly Price</div><div class="setting-sub">Charged each billing cycle</div></div>
+            <input class="setting-input" id="set-monthly" type="number" min="1" step="1" value="29">
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Currency</div></div>
+            <select class="setting-input" id="set-currency" style="width:auto">
+              <option value="NZD">NZD</option>
+              <option value="AUD">AUD</option>
+              <option value="USD">USD</option>
+              <option value="GBP">GBP</option>
+              <option value="EUR">EUR</option>
+            </select>
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Trial Period</div><div class="setting-sub">Days free on sign-up</div></div>
+            <input class="setting-input" id="set-trial" type="number" min="0" max="90" value="14">
+          </div>
+        </div>
+        <div class="setting-box">
+          <h4>Per-Show Percentage</h4>
+          <div class="setting-row">
+            <div><div class="setting-label">Platform Cut</div><div class="setting-sub">% of total show revenue</div></div>
+            <input class="setting-input" id="set-percent" type="number" min="1" max="50" step="0.5" value="15">
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Minimum Fee</div><div class="setting-sub">Per show minimum</div></div>
+            <input class="setting-input" id="set-min-fee" type="number" min="0" step="1" value="5">
+          </div>
+        </div>
+        <div class="setting-box">
+          <h4>Song Requests</h4>
+          <div class="setting-row">
+            <div><div class="setting-label">Base Request Price</div><div class="setting-sub">Default for new musicians</div></div>
+            <input class="setting-input" id="set-base-price" type="number" min="0.5" step="0.5" value="2">
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Surge Window</div><div class="setting-sub">Minutes before price doubles</div></div>
+            <input class="setting-input" id="set-surge-window" type="number" min="10" max="240" value="60">
+          </div>
+        </div>
+        <div class="setting-box">
+          <h4>Platform</h4>
+          <div class="setting-row">
+            <div><div class="setting-label">Auto-approve sign-ups</div><div class="setting-sub">Skip manual approval</div></div>
+            <label class="toggle"><input type="checkbox" id="set-autoapprove"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">New musician emails</div><div class="setting-sub">Notify admin on sign-up</div></div>
+            <label class="toggle"><input type="checkbox" id="set-notify" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Maintenance mode</div><div class="setting-sub">Take platform offline</div></div>
+            <label class="toggle"><input type="checkbox" id="set-maintenance"><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:20px;display:flex;gap:12px;align-items:center">
+        <button class="btn btn-gold" onclick="saveSettings()">Save Settings</button>
+        <span id="settings-saved" style="font-size:12px;color:var(--green);opacity:0;transition:opacity .3s">✓ Settings saved</span>
+      </div>
+    </div>
+
+    <!-- Revenue tab -->
+    <div class="tab-panel" id="apanel-revenue">
+      <div class="section-title" style="font-size:28px;margin-bottom:4px">Revenue</div>
+      <div class="section-sub">Platform earnings from all musician accounts</div>
+      <div id="revenue-table-wrap"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     MUSICIAN SCREEN
+══════════════════════════════════════════════════ -->
+<div id="screen-musician" class="screen">
+  <div class="topbar">
+    <div class="topbar-logo">StageCall <span>Performer Dashboard</span></div>
+    <div class="topbar-user">
+      <div class="topbar-avatar" id="mus-topbar-avatar">🎸</div>
+      <span class="role-badge role-musician">Musician</span>
+      <span id="mus-name-display" style="color:var(--dim);font-size:13px"></span>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <!-- Disabled state -->
+  <div id="mus-disabled" style="display:none">
+    <div class="disabled-screen">
+      <div style="font-size:56px;margin-bottom:16px">🚫</div>
+      <h2>Account Disabled</h2>
+      <p>Your account has been disabled by the platform administrator. Please contact support to resolve any billing or compliance issues.</p>
+    </div>
+  </div>
+
+  <!-- Active musician app -->
+  <div id="mus-active">
+    <div class="page">
+      <div class="stats">
+        <div class="stat"><div class="stat-n" id="mus-stat-songs">0</div><div class="stat-l">Songs</div></div>
+        <div class="stat"><div class="stat-n" id="mus-stat-pending">0</div><div class="stat-l">Pending</div></div>
+        <div class="stat"><div class="stat-n" id="mus-stat-played">0</div><div class="stat-l">Played</div></div>
+        <div class="stat"><div class="stat-n green" id="mus-stat-earned">$0</div><div class="stat-l">Show Earned</div></div>
+        <div class="stat"><div class="stat-n red" id="mus-stat-platform">$0</div><div class="stat-l">Platform Fee</div></div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab-btn active" onclick="musTab('queue')" id="mtab-queue">Queue <span class="pill" id="mus-queue-pill" style="display:none">0</span></button>
+        <button class="tab-btn" onclick="musTab('setlist')" id="mtab-setlist">Setlist</button>
+        <button class="tab-btn" onclick="musTab('profile')" id="mtab-profile">My Profile</button>
+        <button class="tab-btn" onclick="musTab('billing')" id="mtab-billing">Billing</button>
+        <button class="tab-btn" onclick="musTab('qr')" id="mtab-qr">Share QR</button>
+      </div>
+
+      <!-- Queue -->
+      <div class="tab-panel active" id="mpanel-queue">
+        <div id="mus-queue-empty" class="empty"><div class="empty-icon">🎤</div><h3>Queue Empty</h3><p>Audience requests will appear here</p></div>
+        <div class="queue-grid" id="mus-queue-grid"></div>
+      </div>
+
+      <!-- Setlist -->
+      <div class="tab-panel" id="mpanel-setlist">
+        <div class="upload-zone" id="mus-upload-zone" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="musHandleDrop(event)">
+          <input type="file" accept=".csv,.xlsx,.xls" onchange="musHandleFile(this.files[0])">
+          <div class="upload-icon">📂</div>
+          <p><strong>Drop your setlist here</strong> or click to browse</p>
+          <p>CSV or Excel · Columns: Title, Artist, Genre, Key</p>
+        </div>
+        <div class="tip" id="mus-demo-tip">
+          <strong>No file?</strong> Load a sample setlist to try the app.
+          <button class="btn btn-sm btn-ghost" onclick="musLoadDemo()" style="margin-left:6px">Load Demo Setlist</button>
+        </div>
+        <div id="mus-setlist-empty" class="empty" style="display:none"><div class="empty-icon">🎵</div><h3>No Setlist</h3><p>Upload a file above</p></div>
+        <table class="data-table" id="mus-setlist-table" style="display:none">
+          <thead><tr><th>#</th><th>Title</th><th>Artist</th><th>Genre</th><th>Requests</th></tr></thead>
+          <tbody id="mus-setlist-body"></tbody>
+        </table>
+      </div>
+
+      <!-- Profile -->
+      <div class="tab-panel" id="mpanel-profile">
+        <div class="tip">Your profile is shown to the audience when they scan your QR code.</div>
+        <div class="profile-editor">
+          <div class="profile-photo-wrap">
+            <div class="profile-photo-ring" id="mus-photo-ring">
+              <img id="mus-profile-img" src="" alt="">
+              <span id="mus-photo-placeholder">🎸</span>
+              <div class="profile-photo-overlay">Change photo</div>
+              <input type="file" accept="image/*" onchange="musHandlePhoto(this.files[0])">
+            </div>
+            <div class="photo-hint">Click to upload<br>JPG, PNG or GIF</div>
+            <button class="btn btn-ghost btn-xs" id="mus-remove-photo" onclick="musRemovePhoto()" style="display:none">Remove</button>
+          </div>
+          <div class="profile-fields">
+            <div class="form-group"><label class="form-label">Stage Name</label><input class="form-input" id="mus-prof-name" placeholder="Your act name"></div>
+            <div class="form-group"><label class="form-label">Tagline</label><input class="form-input" id="mus-prof-tagline" placeholder="e.g. Acoustic covers & originals"></div>
+            <div class="form-group"><label class="form-label">Bio</label><textarea class="form-input" id="mus-prof-bio" placeholder="Tell the audience about yourself…"></textarea></div>
+            <div class="form-group">
+              <label class="form-label">Social Links</label>
+              <div class="social-row">
+                <input class="form-input" id="mus-prof-instagram" placeholder="Instagram URL">
+                <input class="form-input" id="mus-prof-facebook" placeholder="Facebook URL">
+                <input class="form-input" id="mus-prof-spotify" placeholder="Spotify URL">
+                <input class="form-input" id="mus-prof-website" placeholder="Website URL">
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px">
+              <button class="btn btn-gold" onclick="musSaveProfile()">Save Profile</button>
+              <span id="mus-prof-saved" style="font-size:12px;color:var(--green);opacity:0;transition:opacity .3s">✓ Saved</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Billing -->
+      <div class="tab-panel" id="mpanel-billing">
+        <div class="section-title" style="font-size:28px;margin-bottom:4px">Billing</div>
+        <div class="section-sub" id="mus-billing-sub"></div>
+        <div class="card" id="mus-billing-card">
+          <div class="card-header">
+            <div><div class="card-title">Current Plan</div><div class="card-sub" id="mus-plan-detail"></div></div>
+            <button class="btn btn-ghost btn-sm" onclick="openChangePlan()">Change Plan</button>
+          </div>
+          <div id="mus-billing-status"></div>
+        </div>
+        <div style="margin-top:24px">
+          <div style="font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--dim);margin-bottom:12px">Billing History</div>
+          <div id="mus-billing-history"></div>
+        </div>
+      </div>
+
+      <!-- QR -->
+      <div class="tab-panel" id="mpanel-qr">
+        <div class="card" style="display:flex;gap:32px;align-items:center;flex-wrap:wrap">
+          <img id="mus-qr-img" src="" alt="QR" width="180" height="180" style="border-radius:10px;flex-shrink:0">
+          <div>
+            <div style="font-family:var(--ff-h);font-size:26px;letter-spacing:2px;color:var(--gold);margin-bottom:10px">Share With Your Crowd</div>
+            <p style="font-size:13px;color:var(--dim);line-height:1.7;max-width:340px">Audience scan this to browse your setlist and send song requests from their phone.</p>
+            <div style="margin-top:14px;font-size:11px;color:var(--dim2);font-family:monospace;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 12px;word-break:break-all" id="mus-qr-url"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     AUDIENCE SCREEN
+══════════════════════════════════════════════════ -->
+<div id="screen-audience" class="screen">
+  <div class="topbar">
+    <div class="topbar-logo">StageCall <span>Live Tonight</span></div>
+    <span class="role-badge role-audience">Audience</span>
+  </div>
+  <div class="page">
+    <!-- Profile card -->
+    <div class="aud-profile-card" id="aud-profile-card" style="display:none">
+      <div class="aud-avatar" id="aud-avatar">🎸</div>
+      <div class="aud-profile-info">
+        <div class="aud-name" id="aud-name"></div>
+        <div class="aud-tagline" id="aud-tagline"></div>
+        <div class="aud-bio" id="aud-bio"></div>
+        <div class="social-links" id="aud-socials"></div>
+      </div>
+    </div>
+
+    <div id="aud-no-setlist" class="empty" style="display:none">
+      <div class="empty-icon">🎸</div><h3>No Setlist Yet</h3><p>The performer hasn't loaded their setlist yet.</p>
+    </div>
+
+    <div id="aud-content">
+      <div class="search-wrap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search-input" id="aud-search" placeholder="Search songs or artists…" oninput="renderAudience()">
+      </div>
+      <div class="sort-bar">
+        <span>Sort</span>
+        <button class="sort-pill active" onclick="setSort('popular')" id="sort-popular">🔥 Popular</button>
+        <button class="sort-pill" onclick="setSort('alpha')" id="sort-alpha">A → Z</button>
+        <button class="sort-pill" onclick="setSort('price-lo')" id="sort-price-lo">Price ↑</button>
+        <button class="sort-pill" onclick="setSort('price-hi')" id="sort-price-hi">Price ↓</button>
+      </div>
+      <div id="aud-song-list"></div>
+      <div id="aud-no-results" class="no-results" style="display:none">No songs match your search.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     MODALS
+══════════════════════════════════════════════════ -->
+
+<!-- Add/Edit Musician Modal -->
+<div class="modal-bg" id="modal-musician" onclick="if(event.target===this)closeModal('modal-musician')">
+  <div class="modal">
+    <h2 id="mod-mus-title">Add Musician</h2>
+    <div class="modal-sub" id="mod-mus-sub">Create a new musician account</div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">First Name</label><input class="form-input" id="mod-first" type="text"></div>
+      <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" id="mod-last" type="text"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Stage Name</label><input class="form-input" id="mod-stage" type="text" placeholder="e.g. Acoustic Dave"></div>
+    <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="mod-email" type="email"></div>
+    <div class="form-group"><label class="form-label">Password</label><input class="form-input" id="mod-pass" type="password" placeholder="Leave blank to keep existing"></div>
+    <div class="form-group">
+      <label class="form-label">Billing Plan</label>
+      <select class="form-input" id="mod-plan">
+        <option value="monthly">Monthly Subscription</option>
+        <option value="percent">Per-Show Percentage</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Status</label>
+      <select class="form-input" id="mod-status">
+        <option value="active">Active</option>
+        <option value="pending">Pending Approval</option>
+        <option value="disabled">Disabled</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">Notes (internal)</label><textarea class="form-input" id="mod-notes" rows="2" placeholder="Internal admin notes…"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-musician')">Cancel</button>
+      <button class="btn btn-gold" id="mod-mus-save-btn" onclick="saveMusician()">Save Musician</button>
+    </div>
+  </div>
+</div>
+
+<!-- Change Plan Modal -->
+<div class="modal-bg" id="modal-plan" onclick="if(event.target===this)closeModal('modal-plan')">
+  <div class="modal">
+    <h2>Change Plan</h2>
+    <div class="modal-sub">Switch your billing model</div>
+    <div class="plan-selector">
+      <label class="plan-card" id="cp-monthly-card">
+        <input type="radio" name="cp-plan" value="monthly" onchange="cpSelectPlan('monthly')">
+        <h4>📅 Monthly</h4>
+        <p>Flat monthly fee</p>
+        <div class="plan-price" id="cp-monthly-price">$29/mo</div>
+      </label>
+      <label class="plan-card" id="cp-percent-card">
+        <input type="radio" name="cp-plan" value="percent" onchange="cpSelectPlan('percent')">
+        <h4>📊 Per Show %</h4>
+        <p>Percentage of show revenue</p>
+        <div class="plan-price" id="cp-percent-price">15%</div>
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-plan')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveChangePlan()">Switch Plan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Request Modal (Audience) -->
+<div class="modal-bg" id="modal-request" onclick="if(event.target===this)closeModal('modal-request')">
+  <div class="modal">
+    <div class="modal-song" id="req-modal-title"></div>
+    <div class="modal-artist" id="req-modal-artist"></div>
+    <div class="modal-price-block">
+      <div class="modal-price-num" id="req-modal-price"></div>
+      <div id="req-modal-surge" class="modal-surge-note" style="display:none">⚡ Surge — requested recently, price doubled</div>
+      <div id="req-modal-base" class="modal-base-note">Nominal request fee</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Note for the performer <span style="color:var(--dim2);font-weight:300">(optional)</span></label>
+      <textarea class="form-input" id="req-note" rows="2" placeholder="e.g. Dedication for my mate Dave 🎉"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-request')">Cancel</button>
+      <button class="btn btn-gold" onclick="submitRequest()">Request · <span id="req-modal-btn-price"></span></button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- ══════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════ -->
+<script>
+// ── Seed Data ────────────────────────────────────────────────────
+const BASE_PRICE = 2.00;
+
+let settings = {
+  monthlyPrice: 29,
+  currency: 'NZD',
+  trialDays: 14,
+  platformPercent: 15,
+  minFee: 5,
+  basePrice: 2,
+  surgeWindow: 60,
+  autoApprove: false,
+  notifyAdmin: true,
+  maintenance: false,
+};
+
+let users = [
+  {
+    id: 'admin-1',
+    role: 'admin',
+    email: 'admin@stagecall.com',
+    password: 'admin',
+    name: 'Alex Admin',
+  },
+  {
+    id: 'mus-1',
+    role: 'musician',
+    email: 'musician@stagecall.com',
+    password: 'music',
+    name: 'Dave McKenzie',
+    stageName: 'Acoustic Dave',
+    tagline: 'Covers & originals from the 70s–90s',
+    bio: 'Hamilton-based acoustic guitarist playing your favourite classic hits. Tip a song and I\'ll do my best!',
+    instagram: 'https://instagram.com',
+    facebook: '',
+    spotify: '',
+    website: '',
+    photo: '',
+    plan: 'monthly',
+    status: 'active',
+    joined: '2025-03-12',
+    notes: 'Original beta tester',
+    billingHistory: [
+      { date: '2026-08-01', desc: 'Monthly subscription', amount: -29, type: 'debit' },
+      { date: '2026-07-01', desc: 'Monthly subscription', amount: -29, type: 'debit' },
+      { date: '2026-06-01', desc: 'Monthly subscription', amount: -29, type: 'debit' },
+    ],
+    songs: [
+      {id:'s1',title:'Wonderwall',artist:'Oasis',genre:'Rock',key:''},
+      {id:'s2',title:"Don't Stop Believin'",artist:'Journey',genre:'Rock',key:''},
+      {id:'s3',title:'Sweet Home Alabama',artist:'Lynyrd Skynyrd',genre:'Rock',key:''},
+      {id:'s4',title:'Closing Time',artist:'Semisonic',genre:'Pop',key:''},
+      {id:'s5',title:'Brown Eyed Girl',artist:'Van Morrison',genre:'R&B',key:''},
+      {id:'s6',title:'Hotel California',artist:'Eagles',genre:'Rock',key:''},
+      {id:'s7',title:'Piano Man',artist:'Billy Joel',genre:'Pop',key:''},
+      {id:'s8',title:'Africa',artist:'Toto',genre:'Pop',key:''},
+      {id:'s9',title:'Bohemian Rhapsody',artist:'Queen',genre:'Rock',key:''},
+      {id:'s10',title:'Sweet Caroline',artist:'Neil Diamond',genre:'Pop',key:''},
+      {id:'s11',title:'Living on a Prayer',artist:'Bon Jovi',genre:'Rock',key:''},
+      {id:'s12',title:'Mr. Brightside',artist:'The Killers',genre:'Rock',key:''},
+    ],
+    requests: [],
+  },
+  {
+    id: 'mus-2',
+    role: 'musician',
+    email: 'jane@stagecall.com',
+    password: 'music',
+    name: 'Jane Rivers',
+    stageName: 'Jane Rivers',
+    tagline: 'Jazz & Soul',
+    bio: 'Jazz vocalist and pianist bringing warmth to every venue.',
+    instagram: '',
+    facebook: '',
+    spotify: '',
+    website: '',
+    photo: '',
+    plan: 'percent',
+    status: 'active',
+    joined: '2025-05-20',
+    notes: '',
+    billingHistory: [
+      { date: '2026-07-15', desc: 'Show revenue cut (15%)', amount: -18.75, type: 'debit' },
+      { date: '2026-06-22', desc: 'Show revenue cut (15%)', amount: -12.00, type: 'debit' },
+    ],
+    songs: [
+      {id:'j1',title:'Fly Me To The Moon',artist:'Frank Sinatra',genre:'Jazz',key:'C'},
+      {id:'j2',title:'At Last',artist:'Etta James',genre:'Soul',key:'F'},
+      {id:'j3',title:'Feeling Good',artist:'Nina Simone',genre:'Jazz',key:'G'},
+      {id:'j4',title:'Summertime',artist:'George Gershwin',genre:'Jazz',key:'Dm'},
+      {id:'j5',title:'La Vie en Rose',artist:'Édith Piaf',genre:'Jazz',key:''},
+    ],
+    requests: [],
+  },
+  {
+    id: 'mus-3',
+    role: 'musician',
+    email: 'newguy@stagecall.com',
+    password: 'music',
+    name: 'Chris Strummer',
+    stageName: 'The Strummer',
+    tagline: 'Punk & Indie',
+    bio: '',
+    instagram: '',facebook: '',spotify: '',website: '',photo: '',
+    plan: 'monthly',
+    status: 'pending',
+    joined: '2026-08-18',
+    notes: 'Signed up via website — awaiting review',
+    billingHistory: [],
+    songs: [],
+    requests: [],
+  },
+];
+
+let currentUser = null;
+let currentMusicianId = null; // which musician the audience is viewing
+let selectedSong = null;
+let musicianFilter = 'all';
+let editingMusicianId = null;
+let audienceSort = 'popular';
+
+// ── Auth ─────────────────────────────────────────────────────────
+function loginTab(t) {
+  document.querySelectorAll('.login-tab').forEach(el => el.classList.remove('active'));
+  document.getElementById('ltab-signin').style.display = t === 'signin' ? 'block' : 'none';
+  document.getElementById('ltab-signup').style.display = t === 'signup' ? 'block' : 'none';
+  event.target.classList.add('active');
+  document.querySelectorAll('.login-tab')[t === 'signin' ? 0 : 1].classList.add('active');
+  updateSignupPlanPrices();
+}
+
+function updateSignupPlanPrices() {
+  document.getElementById('su-monthly-price').textContent = `$${settings.monthlyPrice}/mo`;
+  document.getElementById('su-percent-price').textContent = `${settings.platformPercent}%`;
+}
+
+function selectPlan(p) {
+  document.getElementById('plan-monthly-card').classList.toggle('selected', p === 'monthly');
+  document.getElementById('plan-percent-card').classList.toggle('selected', p === 'percent');
+}
+
+function doSignIn() {
+  const email = document.getElementById('si-email').value.trim().toLowerCase();
+  const pass  = document.getElementById('si-pass').value;
+  const err   = document.getElementById('signin-err');
+  const user  = users.find(u => u.email.toLowerCase() === email && u.password === pass);
+  if (!user) { err.textContent = 'Invalid email or password.'; err.style.display = 'block'; return; }
+  err.style.display = 'none';
+  currentUser = user;
+  if (user.role === 'admin') launchAdmin();
+  else if (user.role === 'musician') launchMusician(user);
+}
+
+function doSignUp() {
+  const first = document.getElementById('su-first').value.trim();
+  const last  = document.getElementById('su-last').value.trim();
+  const stage = document.getElementById('su-stage').value.trim();
+  const email = document.getElementById('su-email').value.trim().toLowerCase();
+  const pass  = document.getElementById('su-pass').value;
+  const plan  = document.querySelector('input[name="su-plan"]:checked').value;
+  const err   = document.getElementById('signup-err');
+
+  if (!first || !last || !email || !pass) { err.textContent = 'Please fill in all required fields.'; err.style.display = 'block'; return; }
+  if (pass.length < 6) { err.textContent = 'Password must be at least 6 characters.'; err.style.display = 'block'; return; }
+  if (users.find(u => u.email.toLowerCase() === email)) { err.textContent = 'That email is already registered.'; err.style.display = 'block'; return; }
+  err.style.display = 'none';
+
+  const newUser = {
+    id: 'mus-' + Date.now(),
+    role: 'musician',
+    email, password: pass,
+    name: `${first} ${last}`,
+    stageName: stage || `${first} ${last}`,
+    tagline: '', bio: '', instagram: '', facebook: '', spotify: '', website: '', photo: '',
+    plan,
+    status: settings.autoApprove ? 'active' : 'pending',
+    joined: new Date().toISOString().slice(0, 10),
+    notes: 'Self sign-up',
+    billingHistory: [],
+    songs: [],
+    requests: [],
+  };
+  users.push(newUser);
+  currentUser = newUser;
+  launchMusician(newUser);
+  showToast(settings.autoApprove ? '✓ Account created! Welcome.' : '✓ Account created — pending admin approval');
+}
+
+function doLogout() {
+  currentUser = null;
+  showScreen('login');
+  document.getElementById('si-email').value = '';
+  document.getElementById('si-pass').value = '';
+  document.getElementById('signin-err').style.display = 'none';
+}
+
+// ── Screen routing ────────────────────────────────────────────────
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+}
+
+function launchAdmin() {
+  document.getElementById('admin-name-display').textContent = currentUser.name;
+  showScreen('admin');
+  renderAdminDashboard();
+}
+
+function launchMusician(user) {
+  document.getElementById('mus-name-display').textContent = user.stageName || user.name;
+  const av = document.getElementById('mus-topbar-avatar');
+  if (user.photo) { av.innerHTML = `<img src="${user.photo}" alt="">`; }
+  else { av.textContent = '🎸'; }
+  document.getElementById('mus-disabled').style.display  = user.status === 'disabled' ? 'block' : 'none';
+  document.getElementById('mus-active').style.display    = user.status !== 'disabled' ? 'block' : 'none';
+  showScreen('musician');
+  if (user.status !== 'disabled') {
+    populateMusicianProfile(user);
+    renderMusicianDashboard();
+    musTab('queue');
+  }
+}
+
+// ── Admin ─────────────────────────────────────────────────────────
+function admTab(name) {
+  ['musicians','settings','revenue'].forEach(t => {
+    document.getElementById('apanel-' + t).classList.remove('active');
+    document.getElementById('atab-' + t).classList.remove('active');
+  });
+  document.getElementById('apanel-' + name).classList.add('active');
+  document.getElementById('atab-' + name).classList.add('active');
+  if (name === 'revenue') renderAdminRevenue();
+  if (name === 'settings') loadSettingsForm();
+}
+
+function renderAdminDashboard() {
+  const musicians = users.filter(u => u.role === 'musician');
+  const active    = musicians.filter(u => u.status === 'active').length;
+  const disabled  = musicians.filter(u => u.status === 'disabled').length;
+  const pending   = musicians.filter(u => u.status === 'pending').length;
+  const revenue   = musicians.reduce((s, u) => {
+    return s + u.billingHistory.filter(b => b.type === 'debit').reduce((a, b) => a + Math.abs(b.amount), 0);
+  }, 0);
+
+  document.getElementById('adm-stat-total').textContent   = musicians.length;
+  document.getElementById('adm-stat-active').textContent  = active;
+  document.getElementById('adm-stat-disabled').textContent= disabled;
+  document.getElementById('adm-stat-pending').textContent = pending;
+  document.getElementById('adm-stat-revenue').textContent = '$' + revenue.toFixed(0);
+
+  const pill = document.getElementById('adm-pending-pill');
+  if (pending > 0) { pill.textContent = pending; pill.style.display = 'inline-flex'; }
+  else { pill.style.display = 'none'; }
+
+  renderMusicianList();
+}
+
+function setMusicianFilter(f) {
+  musicianFilter = f;
+  document.querySelectorAll('[id^="mf-"]').forEach(el => el.classList.remove('active'));
+  document.getElementById('mf-' + f).classList.add('active');
+  renderMusicianList();
+}
+
+function renderMusicianList() {
+  const musicians = users.filter(u => u.role === 'musician');
+  let list = musicians;
+  if (musicianFilter !== 'all') list = musicians.filter(u => u.status === musicianFilter);
+
+  const container = document.getElementById('musician-list');
+  if (!list.length) {
+    container.innerHTML = `<div class="empty"><div class="empty-icon">🎸</div><h3>No Musicians</h3><p>No accounts match this filter</p></div>`;
+    return;
+  }
+
+  container.innerHTML = list.map(u => {
+    const statusBadge = {
+      active:   '<span class="badge badge-green">● Active</span>',
+      pending:  '<span class="badge badge-blue">◌ Pending</span>',
+      disabled: '<span class="badge badge-red">✕ Disabled</span>',
+    }[u.status] || '';
+    const planBadge = u.plan === 'monthly'
+      ? `<span class="badge badge-gold">📅 $${settings.monthlyPrice}/mo</span>`
+      : `<span class="badge badge-purple">📊 ${settings.platformPercent}%</span>`;
+    const avatar = u.photo
+      ? `<img src="${u.photo}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
+      : '🎸';
+    const approveBtn = u.status === 'pending'
+      ? `<button class="btn btn-green btn-sm" onclick="quickApprove('${u.id}')">Approve</button>` : '';
+    const toggleBtn = u.status === 'active'
+      ? `<button class="btn btn-red btn-sm" onclick="quickDisable('${u.id}')">Disable</button>`
+      : u.status === 'disabled'
+      ? `<button class="btn btn-ghost btn-sm" onclick="quickEnable('${u.id}')">Enable</button>` : '';
+
+    return `<div class="musician-row">
+      <div class="musician-avatar">${avatar}</div>
+      <div class="musician-info">
+        <div class="musician-name">${esc(u.stageName || u.name)}</div>
+        <div class="musician-meta">${esc(u.email)} · Joined ${u.joined}</div>
+        <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">${statusBadge} ${planBadge}</div>
+        ${u.notes ? `<div style="font-size:11px;color:var(--dim);margin-top:4px;font-style:italic">${esc(u.notes)}</div>` : ''}
+      </div>
+      <div class="musician-actions">
+        ${approveBtn}
+        ${toggleBtn}
+        <button class="btn btn-ghost btn-sm" onclick="openEditMusician('${u.id}')">Edit</button>
+        <button class="btn btn-ghost btn-sm" onclick="previewAsMusician('${u.id}')">Preview</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function quickApprove(id) {
+  const u = users.find(u => u.id === id);
+  if (u) { u.status = 'active'; renderAdminDashboard(); showToast(`✓ ${u.stageName || u.name} approved`); }
+}
+function quickDisable(id) {
+  const u = users.find(u => u.id === id);
+  if (u) { u.status = 'disabled'; renderAdminDashboard(); showToast(`${u.stageName || u.name} disabled`); }
+}
+function quickEnable(id) {
+  const u = users.find(u => u.id === id);
+  if (u) { u.status = 'active'; renderAdminDashboard(); showToast(`✓ ${u.stageName || u.name} re-enabled`); }
+}
+
+function previewAsMusician(id) {
+  const u = users.find(u => u.id === id);
+  if (!u) return;
+  currentUser = u;
+  launchMusician(u);
+  showToast(`Previewing as ${u.stageName || u.name}`);
+}
+
+function openAddMusician() {
+  editingMusicianId = null;
+  document.getElementById('mod-mus-title').textContent = 'Add Musician';
+  document.getElementById('mod-mus-sub').textContent = 'Create a new musician account';
+  document.getElementById('mod-mus-save-btn').textContent = 'Add Musician';
+  ['mod-first','mod-last','mod-stage','mod-email','mod-pass','mod-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('mod-plan').value = 'monthly';
+  document.getElementById('mod-status').value = 'pending';
+  openModal('modal-musician');
+}
+
+function openEditMusician(id) {
+  editingMusicianId = id;
+  const u = users.find(u => u.id === id);
+  if (!u) return;
+  document.getElementById('mod-mus-title').textContent = 'Edit Musician';
+  document.getElementById('mod-mus-sub').textContent = esc(u.email);
+  document.getElementById('mod-mus-save-btn').textContent = 'Save Changes';
+  const [first, ...rest] = (u.name || '').split(' ');
+  document.getElementById('mod-first').value  = first || '';
+  document.getElementById('mod-last').value   = rest.join(' ') || '';
+  document.getElementById('mod-stage').value  = u.stageName || '';
+  document.getElementById('mod-email').value  = u.email || '';
+  document.getElementById('mod-pass').value   = '';
+  document.getElementById('mod-plan').value   = u.plan || 'monthly';
+  document.getElementById('mod-status').value = u.status || 'active';
+  document.getElementById('mod-notes').value  = u.notes || '';
+  openModal('modal-musician');
+}
+
+function saveMusician() {
+  const first  = document.getElementById('mod-first').value.trim();
+  const last   = document.getElementById('mod-last').value.trim();
+  const stage  = document.getElementById('mod-stage').value.trim();
+  const email  = document.getElementById('mod-email').value.trim().toLowerCase();
+  const pass   = document.getElementById('mod-pass').value;
+  const plan   = document.getElementById('mod-plan').value;
+  const status = document.getElementById('mod-status').value;
+  const notes  = document.getElementById('mod-notes').value.trim();
+
+  if (!first || !email) { showToast('First name and email are required', 'error'); return; }
+
+  if (editingMusicianId) {
+    const u = users.find(u => u.id === editingMusicianId);
+    if (!u) return;
+    u.name      = `${first} ${last}`.trim();
+    u.stageName = stage || u.name;
+    u.email     = email;
+    if (pass) u.password = pass;
+    u.plan      = plan;
+    u.status    = status;
+    u.notes     = notes;
+    showToast('✓ Musician updated');
+  } else {
+    if (!pass) { showToast('Password required for new account', 'error'); return; }
+    users.push({
+      id: 'mus-' + Date.now(), role: 'musician',
+      email, password: pass,
+      name: `${first} ${last}`.trim(),
+      stageName: stage || `${first} ${last}`.trim(),
+      tagline: '', bio: '', instagram: '', facebook: '', spotify: '', website: '', photo: '',
+      plan, status, joined: new Date().toISOString().slice(0, 10), notes,
+      billingHistory: [], songs: [], requests: [],
+    });
+    showToast('✓ Musician added');
+  }
+
+  closeModal('modal-musician');
+  renderAdminDashboard();
+}
+
+function loadSettingsForm() {
+  document.getElementById('set-monthly').value    = settings.monthlyPrice;
+  document.getElementById('set-currency').value   = settings.currency;
+  document.getElementById('set-trial').value      = settings.trialDays;
+  document.getElementById('set-percent').value    = settings.platformPercent;
+  document.getElementById('set-min-fee').value    = settings.minFee;
+  document.getElementById('set-base-price').value = settings.basePrice;
+  document.getElementById('set-surge-window').value = settings.surgeWindow;
+  document.getElementById('set-autoapprove').checked = settings.autoApprove;
+  document.getElementById('set-notify').checked   = settings.notifyAdmin;
+  document.getElementById('set-maintenance').checked = settings.maintenance;
+}
+
+function saveSettings() {
+  settings.monthlyPrice     = parseFloat(document.getElementById('set-monthly').value) || 29;
+  settings.currency         = document.getElementById('set-currency').value;
+  settings.trialDays        = parseInt(document.getElementById('set-trial').value) || 14;
+  settings.platformPercent  = parseFloat(document.getElementById('set-percent').value) || 15;
+  settings.minFee           = parseFloat(document.getElementById('set-min-fee').value) || 5;
+  settings.basePrice        = parseFloat(document.getElementById('set-base-price').value) || 2;
+  settings.surgeWindow      = parseInt(document.getElementById('set-surge-window').value) || 60;
+  settings.autoApprove      = document.getElementById('set-autoapprove').checked;
+  settings.notifyAdmin      = document.getElementById('set-notify').checked;
+  settings.maintenance      = document.getElementById('set-maintenance').checked;
+  const note = document.getElementById('settings-saved');
+  note.style.opacity = 1;
+  setTimeout(() => note.style.opacity = 0, 2500);
+  updateSignupPlanPrices();
+}
+
+function renderAdminRevenue() {
+  const wrap = document.getElementById('revenue-table-wrap');
+  const rows = [];
+  users.filter(u => u.role === 'musician').forEach(u => {
+    u.billingHistory.forEach(b => {
+      rows.push({ musician: u.stageName || u.name, ...b });
+    });
+  });
+  rows.sort((a, b) => b.date.localeCompare(a.date));
+  if (!rows.length) { wrap.innerHTML = '<div class="empty"><div class="empty-icon">💰</div><h3>No Revenue Yet</h3><p>Billing records will appear here</p></div>'; return; }
+  wrap.innerHTML = `<table class="data-table">
+    <thead><tr><th>Date</th><th>Musician</th><th>Description</th><th>Amount</th></tr></thead>
+    <tbody>${rows.map(r => `<tr>
+      <td style="color:var(--dim)">${r.date}</td>
+      <td style="font-weight:500">${esc(r.musician)}</td>
+      <td>${esc(r.desc)}</td>
+      <td style="font-family:var(--ff-h);font-size:18px;color:${r.type==='debit'?'var(--green)':'var(--red)'}">${r.type==='debit'?'+':'−'}$${Math.abs(r.amount).toFixed(2)}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+// ── Musician Dashboard ────────────────────────────────────────────
+function musTab(name) {
+  ['queue','setlist','profile','billing','qr'].forEach(t => {
+    document.getElementById('mpanel-' + t).classList.remove('active');
+    document.getElementById('mtab-' + t).classList.remove('active');
+  });
+  document.getElementById('mpanel-' + name).classList.add('active');
+  document.getElementById('mtab-' + name).classList.add('active');
+  if (name === 'billing') renderMusicianBilling();
+  if (name === 'qr') renderMusQR();
+}
+
+function renderMusicianDashboard() {
+  const u = currentUser;
+  if (!u) return;
+  const pending = u.requests.filter(r => !r.dismissed).length;
+  const played  = u.requests.filter(r => r.dismissed).length;
+  const earned  = u.requests.reduce((s, r) => s + r.price, 0);
+  const cut     = u.plan === 'percent' ? Math.max(settings.minFee, earned * settings.platformPercent / 100) : 0;
+
+  document.getElementById('mus-stat-songs').textContent   = u.songs.length;
+  document.getElementById('mus-stat-pending').textContent = pending;
+  document.getElementById('mus-stat-played').textContent  = played;
+  document.getElementById('mus-stat-earned').textContent  = '$' + earned.toFixed(2);
+  document.getElementById('mus-stat-platform').textContent= u.plan === 'percent' ? '-$' + cut.toFixed(2) : '$' + settings.monthlyPrice + '/mo';
+
+  const pill = document.getElementById('mus-queue-pill');
+  if (pending > 0) { pill.textContent = pending; pill.style.display = 'inline-flex'; }
+  else { pill.style.display = 'none'; }
+
+  renderMusicianQueue();
+  renderMusicianSetlist();
+}
+
+function renderMusicianQueue() {
+  const u = currentUser;
+  const grid  = document.getElementById('mus-queue-grid');
+  const empty = document.getElementById('mus-queue-empty');
+  const active = u.requests.filter(r => !r.dismissed)
+    .sort((a, b) => musActiveCount(b.songId) - musActiveCount(a.songId));
+
+  if (!active.length) { empty.style.display = 'block'; grid.innerHTML = ''; return; }
+  empty.style.display = 'none';
+
+  grid.innerHTML = active.map(req => {
+    const song = u.songs.find(s => s.id === req.songId) || {};
+    const cnt  = musActiveCount(req.songId);
+    const hot  = cnt >= 2;
+    return `<div class="req-card ${hot ? 'hot' : ''}">
+      <div><div class="req-title">${esc(song.title || 'Unknown')}</div><div class="req-artist">${esc(song.artist || '')}</div></div>
+      <div class="req-meta">
+        <span class="badge badge-gold">$${req.price.toFixed(2)}</span>
+        ${hot ? `<span class="badge badge-red">🔥 ${cnt} requests</span>` : ''}
+      </div>
+      ${req.note ? `<div class="req-note">"${esc(req.note)}"</div>` : ''}
+      <div style="margin-top:4px"><button class="btn btn-gold btn-sm" onclick="musDismiss('${req.id}')">✓ Mark Played</button></div>
+    </div>`;
+  }).join('');
+}
+
+function musDismiss(reqId) {
+  const req  = currentUser.requests.find(r => r.id === reqId);
+  currentUser.requests = currentUser.requests.map(r => r.id === reqId ? { ...r, dismissed: true } : r);
+  const song = currentUser.songs.find(s => s.id === (req && req.songId)) || {};
+  renderMusicianDashboard();
+  showToast(`✓ Played: ${song.title || 'song'}`);
+}
+
+function renderMusicianSetlist() {
+  const u = currentUser;
+  const tbl = document.getElementById('mus-setlist-table');
+  const body = document.getElementById('mus-setlist-body');
+  const empty = document.getElementById('mus-setlist-empty');
+  if (!u.songs.length) { tbl.style.display = 'none'; empty.style.display = 'block'; return; }
+  tbl.style.display = 'table'; empty.style.display = 'none';
+  body.innerHTML = u.songs.map((s, i) => {
+    const cnt = musActiveCount(s.id);
+    return `<tr>
+      <td style="color:var(--dim2)">${i+1}</td>
+      <td style="font-weight:600">${esc(s.title)}</td>
+      <td style="color:var(--dim)">${esc(s.artist) || '—'}</td>
+      <td style="color:var(--dim);font-size:12px">${esc(s.genre) || '—'}</td>
+      <td>${cnt > 0 ? `<span class="badge badge-gold">🔥 ${cnt}</span>` : '<span style="color:var(--dim2);font-size:12px">—</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function musHandleDrop(e) {
+  e.preventDefault();
+  document.getElementById('mus-upload-zone').classList.remove('over');
+  musHandleFile(e.dataTransfer.files[0]);
+}
+
+function musHandleFile(file) {
+  if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext === 'csv') {
+    Papa.parse(file, { header: true, skipEmptyLines: true, complete: r => musLoadSongs(r.data) });
+  } else if (['xlsx','xls'].includes(ext)) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const wb = XLSX.read(e.target.result, { type: 'binary' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      musLoadSongs(XLSX.utils.sheet_to_json(ws, { defval: '' }));
+    };
+    reader.readAsBinaryString(file);
+  }
+}
+
+function musLoadSongs(rows) {
+  const get = (obj, alts) => {
+    for (const a of alts) {
+      const k = Object.keys(obj).find(k => k.toLowerCase().trim().includes(a));
+      if (k) return String(obj[k]).trim();
+    }
+    return '';
+  };
+  const loaded = rows.map(r => ({
+    id: Math.random().toString(36).slice(2),
+    title: get(r, ['title','song','name','track']),
+    artist: get(r, ['artist','band','performer','by']),
+    genre: get(r, ['genre','style','type']),
+    key: get(r, ['key']),
+  })).filter(s => s.title);
+  if (!loaded.length) { showToast('No songs found — check column headers', 'error'); return; }
+  currentUser.songs = loaded;
+  currentUser.requests = [];
+  document.getElementById('mus-demo-tip').style.display = 'none';
+  renderMusicianDashboard();
+  showToast(`✓ Loaded ${loaded.length} songs`);
+}
+
+function musLoadDemo() {
+  currentUser.songs = [
+    {id:'d1',title:'Wonderwall',artist:'Oasis',genre:'Rock',key:''},
+    {id:'d2',title:"Don't Stop Believin'",artist:'Journey',genre:'Rock',key:''},
+    {id:'d3',title:'Hotel California',artist:'Eagles',genre:'Rock',key:''},
+    {id:'d4',title:'Piano Man',artist:'Billy Joel',genre:'Pop',key:''},
+    {id:'d5',title:'Africa',artist:'Toto',genre:'Pop',key:''},
+    {id:'d6',title:'Bohemian Rhapsody',artist:'Queen',genre:'Rock',key:''},
+    {id:'d7',title:'Sweet Caroline',artist:'Neil Diamond',genre:'Pop',key:''},
+    {id:'d8',title:'Living on a Prayer',artist:'Bon Jovi',genre:'Rock',key:''},
+    {id:'d9',title:'Mr. Brightside',artist:'The Killers',genre:'Rock',key:''},
+    {id:'d10',title:'Closing Time',artist:'Semisonic',genre:'Pop',key:''},
+  ];
+  currentUser.requests = [];
+  document.getElementById('mus-demo-tip').style.display = 'none';
+  renderMusicianDashboard();
+  showToast(`✓ Demo setlist loaded`);
+}
+
+function musActiveCount(songId) {
+  return currentUser.requests.filter(r => r.songId === songId && !r.dismissed).length;
+}
+
+function musCalcPrice(songId) {
+  const recent = currentUser.requests.filter(r =>
+    r.songId === songId && !r.dismissed &&
+    Date.now() - r.timestamp < settings.surgeWindow * 60 * 1000
+  ).length;
+  return settings.basePrice * Math.pow(2, recent);
+}
+
+// ── Musician Profile ──────────────────────────────────────────────
+function populateMusicianProfile(u) {
+  document.getElementById('mus-prof-name').value      = u.stageName || '';
+  document.getElementById('mus-prof-tagline').value   = u.tagline || '';
+  document.getElementById('mus-prof-bio').value       = u.bio || '';
+  document.getElementById('mus-prof-instagram').value = u.instagram || '';
+  document.getElementById('mus-prof-facebook').value  = u.facebook || '';
+  document.getElementById('mus-prof-spotify').value   = u.spotify || '';
+  document.getElementById('mus-prof-website').value   = u.website || '';
+  const img = document.getElementById('mus-profile-img');
+  const ph  = document.getElementById('mus-photo-placeholder');
+  const rb  = document.getElementById('mus-remove-photo');
+  if (u.photo) { img.src = u.photo; img.classList.add('loaded'); ph.style.display = 'none'; rb.style.display = 'inline-flex'; }
+  else { img.classList.remove('loaded'); ph.style.display = 'block'; rb.style.display = 'none'; }
+}
+
+function musSaveProfile() {
+  const u = currentUser;
+  u.stageName  = document.getElementById('mus-prof-name').value.trim();
+  u.tagline    = document.getElementById('mus-prof-tagline').value.trim();
+  u.bio        = document.getElementById('mus-prof-bio').value.trim();
+  u.instagram  = document.getElementById('mus-prof-instagram').value.trim();
+  u.facebook   = document.getElementById('mus-prof-facebook').value.trim();
+  u.spotify    = document.getElementById('mus-prof-spotify').value.trim();
+  u.website    = document.getElementById('mus-prof-website').value.trim();
+  document.getElementById('mus-name-display').textContent = u.stageName || u.name;
+  const note = document.getElementById('mus-prof-saved');
+  note.style.opacity = 1; setTimeout(() => note.style.opacity = 0, 2500);
+}
+
+function musHandlePhoto(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    currentUser.photo = e.target.result;
+    const img = document.getElementById('mus-profile-img');
+    img.src = e.target.result; img.classList.add('loaded');
+    document.getElementById('mus-photo-placeholder').style.display = 'none';
+    document.getElementById('mus-remove-photo').style.display = 'inline-flex';
+    const av = document.getElementById('mus-topbar-avatar');
+    av.innerHTML = `<img src="${e.target.result}" alt="">`;
+  };
+  reader.readAsDataURL(file);
+}
+
+function musRemovePhoto() {
+  currentUser.photo = '';
+  const img = document.getElementById('mus-profile-img');
+  img.src = ''; img.classList.remove('loaded');
+  document.getElementById('mus-photo-placeholder').style.display = 'block';
+  document.getElementById('mus-remove-photo').style.display = 'none';
+  document.getElementById('mus-topbar-avatar').textContent = '🎸';
+}
+
+// ── Billing ───────────────────────────────────────────────────────
+function renderMusicianBilling() {
+  const u = currentUser;
+  const earned = u.requests.reduce((s, r) => s + r.price, 0);
+  const cut    = u.plan === 'percent' ? Math.max(settings.minFee, earned * settings.platformPercent / 100) : 0;
+
+  document.getElementById('mus-plan-detail').textContent = u.plan === 'monthly'
+    ? `Monthly Subscription · ${settings.currency} $${settings.monthlyPrice}/month`
+    : `Per-Show Percentage · ${settings.platformPercent}% of show revenue (min $${settings.minFee})`;
+
+  document.getElementById('mus-billing-sub').textContent = u.plan === 'monthly'
+    ? `You're on a flat monthly plan. Your next charge will be $${settings.monthlyPrice} ${settings.currency}.`
+    : `You're on a per-show plan. Platform takes ${settings.platformPercent}% of each show's total request revenue.`;
+
+  const statusHtml = u.plan === 'percent' && earned > 0
+    ? `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 18px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px">
+          <span style="color:var(--dim)">This show's revenue</span><span style="font-family:var(--ff-h);font-size:18px;color:var(--green)">+$${earned.toFixed(2)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px">
+          <span style="color:var(--dim)">Platform fee (${settings.platformPercent}%)</span><span style="font-family:var(--ff-h);font-size:18px;color:var(--red)">−$${cut.toFixed(2)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;border-top:1px solid var(--border);padding-top:8px">
+          <span style="font-weight:600">Your net</span><span style="font-family:var(--ff-h);font-size:20px;color:var(--gold)">$${Math.max(0, earned - cut).toFixed(2)}</span>
+        </div>
+      </div>` : '';
+  document.getElementById('mus-billing-status').innerHTML = statusHtml;
+
+  const hist = [...u.billingHistory].reverse();
+  document.getElementById('mus-billing-history').innerHTML = hist.length
+    ? hist.map(b => `<div class="billing-row">
+        <div class="bl-date">${b.date}</div>
+        <div class="bl-desc">${esc(b.desc)}</div>
+        <div class="bl-amount ${b.type}">${b.type === 'debit' ? '−' : '+'}$${Math.abs(b.amount).toFixed(2)}</div>
+      </div>`).join('')
+    : '<div class="empty" style="padding:30px"><div class="empty-icon">📋</div><h3>No History</h3><p>Billing records will appear here</p></div>';
+}
+
+function openChangePlan() {
+  const u = currentUser;
+  document.getElementById('cp-monthly-price').textContent = `$${settings.monthlyPrice}/mo`;
+  document.getElementById('cp-percent-price').textContent = `${settings.platformPercent}%`;
+  cpSelectPlan(u.plan === 'monthly' ? 'monthly' : 'percent');
+  openModal('modal-plan');
+}
+
+function cpSelectPlan(p) {
+  document.getElementById('cp-monthly-card').classList.toggle('selected', p === 'monthly');
+  document.getElementById('cp-percent-card').classList.toggle('selected', p !== 'monthly');
+  document.querySelector(`input[name="cp-plan"][value="${p}"]`).checked = true;
+}
+
+function saveChangePlan() {
+  const newPlan = document.querySelector('input[name="cp-plan"]:checked').value;
+  currentUser.plan = newPlan;
+  closeModal('modal-plan');
+  renderMusicianBilling();
+  renderMusicianDashboard();
+  showToast(`✓ Switched to ${newPlan === 'monthly' ? 'Monthly' : 'Per-Show %'} plan`);
+}
+
+// ── QR ────────────────────────────────────────────────────────────
+function renderMusQR() {
+  const url = window.location.href.split('#')[0] + '#audience-' + currentUser.id;
+  const enc = encodeURIComponent(url);
+  document.getElementById('mus-qr-img').src =
+    `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${enc}&bgcolor=111111&color=d4a843&qzone=2`;
+  document.getElementById('mus-qr-url').textContent = url;
+}
+
+// ── Audience ──────────────────────────────────────────────────────
+function launchAudience(musicianId) {
+  const u = users.find(u => u.id === musicianId);
+  if (!u || u.status !== 'active') {
+    showScreen('audience');
+    document.getElementById('aud-profile-card').style.display = 'none';
+    document.getElementById('aud-content').style.display = 'none';
+    document.getElementById('aud-no-setlist').style.display = 'block';
+    document.getElementById('aud-no-setlist').innerHTML = `<div class="empty-icon">🚫</div><h3>Not Available</h3><p>This performer's page is currently offline.</p>`;
+    return;
+  }
+  currentMusicianId = musicianId;
+
+  // Profile card
+  const card = document.getElementById('aud-profile-card');
+  if (u.stageName || u.bio) {
+    card.style.display = 'flex';
+    const av = document.getElementById('aud-avatar');
+    if (u.photo) { av.innerHTML = `<img src="${u.photo}" alt="">`; } else { av.textContent = '🎸'; }
+    document.getElementById('aud-name').textContent    = u.stageName || u.name;
+    document.getElementById('aud-tagline').textContent = u.tagline || '';
+    document.getElementById('aud-bio').textContent     = u.bio || '';
+    const socials = document.getElementById('aud-socials');
+    const links = [
+      { key: 'instagram', label: '📷 Instagram' },
+      { key: 'facebook',  label: '📘 Facebook'  },
+      { key: 'spotify',   label: '🎧 Spotify'   },
+      { key: 'website',   label: '🌐 Website'   },
+    ].filter(l => u[l.key]);
+    socials.innerHTML = links.map(l => `<a class="social-link" href="${esc(u[l.key])}" target="_blank" rel="noopener">${l.label}</a>`).join('');
+  } else { card.style.display = 'none'; }
+
+  showScreen('audience');
+  renderAudience();
+}
+
+function setSort(s) {
+  audienceSort = s;
+  document.querySelectorAll('.sort-pill').forEach(el => el.classList.remove('active'));
+  document.getElementById('sort-' + s).classList.add('active');
+  renderAudience();
+}
+
+function renderAudience() {
+  const u = users.find(u => u.id === currentMusicianId);
+  const noSet = document.getElementById('aud-no-setlist');
+  const cont  = document.getElementById('aud-content');
+
+  if (!u || !u.songs.length) {
+    noSet.innerHTML = `<div class="empty-icon">🎸</div><h3>No Setlist Yet</h3><p>The performer hasn't loaded their setlist yet.</p>`;
+    noSet.style.display = 'block'; cont.style.display = 'none'; return;
+  }
+  noSet.style.display = 'none'; cont.style.display = 'block';
+
+  const q = (document.getElementById('aud-search').value || '').toLowerCase();
+  let filtered = u.songs.filter(s =>
+    !q || s.title.toLowerCase().includes(q) || (s.artist || '').toLowerCase().includes(q) || (s.genre || '').toLowerCase().includes(q)
+  );
+
+  const price = id => {
+    const recent = u.requests.filter(r => r.songId === id && !r.dismissed && Date.now() - r.timestamp < settings.surgeWindow * 60 * 1000).length;
+    return settings.basePrice * Math.pow(2, recent);
+  };
+  const cnt = id => u.requests.filter(r => r.songId === id && !r.dismissed).length;
+
+  if (audienceSort === 'popular') filtered.sort((a, b) => cnt(b.id) - cnt(a.id));
+  else if (audienceSort === 'alpha') filtered.sort((a, b) => a.title.localeCompare(b.title));
+  else if (audienceSort === 'price-lo') filtered.sort((a, b) => price(a.id) - price(b.id));
+  else if (audienceSort === 'price-hi') filtered.sort((a, b) => price(b.id) - price(a.id));
+
+  const list = document.getElementById('aud-song-list');
+  const noR  = document.getElementById('aud-no-results');
+  if (!filtered.length) { list.innerHTML = ''; noR.style.display = 'block'; return; }
+  noR.style.display = 'none';
+
+  list.innerHTML = filtered.map((s, i) => {
+    const p = price(s.id); const c = cnt(s.id);
+    const isSurge = p > settings.basePrice; const isHot = c >= 2;
+    const meta = [s.artist, s.genre].filter(Boolean).join(' · ');
+    return `<div class="song-card" onclick="openAudRequest('${s.id}')">
+      <div class="song-num">${i+1}</div>
+      <div class="song-info">
+        <div class="song-title">${esc(s.title)}</div>
+        ${meta ? `<div class="song-meta-txt">${esc(meta)}</div>` : ''}
+      </div>
+      <div class="song-right">
+        <div class="song-price ${isSurge ? 'surge' : ''}">$${p.toFixed(2)}</div>
+        ${isHot ? '<div class="hot-lbl">🔥 Popular</div>' : ''}
+        ${isSurge ? '<div class="surge-lbl">Surge</div>' : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openAudRequest(songId) {
+  const u = users.find(u => u.id === currentMusicianId);
+  selectedSong = u && u.songs.find(s => s.id === songId);
+  if (!selectedSong) return;
+  const recent = u.requests.filter(r => r.songId === songId && !r.dismissed && Date.now() - r.timestamp < settings.surgeWindow * 60 * 1000).length;
+  const price  = settings.basePrice * Math.pow(2, recent);
+  const isSurge = price > settings.basePrice;
+  document.getElementById('req-modal-title').textContent  = selectedSong.title;
+  document.getElementById('req-modal-artist').textContent = selectedSong.artist || 'Unknown artist';
+  document.getElementById('req-modal-price').textContent  = `$${price.toFixed(2)}`;
+  document.getElementById('req-modal-price').className    = 'modal-price-num' + (isSurge ? ' surge' : '');
+  document.getElementById('req-modal-surge').style.display = isSurge ? 'block' : 'none';
+  document.getElementById('req-modal-base').style.display  = isSurge ? 'none' : 'block';
+  document.getElementById('req-modal-btn-price').textContent = `$${price.toFixed(2)}`;
+  document.getElementById('req-note').value = '';
+  openModal('modal-request');
+}
+
+function submitRequest() {
+  if (!selectedSong) return;
+  const u = users.find(u => u.id === currentMusicianId);
+  if (!u) return;
+  const recent = u.requests.filter(r => r.songId === selectedSong.id && !r.dismissed && Date.now() - r.timestamp < settings.surgeWindow * 60 * 1000).length;
+  const price  = settings.basePrice * Math.pow(2, recent);
+  u.requests.push({
+    id: Math.random().toString(36).slice(2),
+    songId: selectedSong.id,
+    price, note: document.getElementById('req-note').value.trim(),
+    timestamp: Date.now(), dismissed: false,
+  });
+  // Update musician dashboard if same user is logged in
+  if (currentUser && currentUser.id === u.id) renderMusicianDashboard();
+  const title = selectedSong.title;
+  closeModal('modal-request');
+  renderAudience();
+  showToast(`🎵 Requested: ${title}`);
+}
+
+// ── Modal helpers ─────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ── Utilities ─────────────────────────────────────────────────────
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+let toastTimer;
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = type === 'error' ? '#d95858' : '#4db87a';
+  t.style.color = '#000';
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+updateSignupPlanPrices();
+
+// Handle audience URL hash e.g. #audience-mus-1
+const hash = window.location.hash;
+if (hash.startsWith('#audience-')) {
+  const id = hash.replace('#audience-', '');
+  launchAudience(id);
+}
+</script>
+</body>
+</html>
